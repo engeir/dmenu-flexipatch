@@ -17,7 +17,7 @@
  * or xyw patches, to make the menu stand out from similarly coloured windows.
  * http://tools.suckless.org/dmenu/patches/border/
  */
-#define BORDER_PATCH 0
+#define BORDER_PATCH 1
 
 /* By default the caret in dmenu has a width of 2 pixels. This patch makes that configurable
  * as well as overridable via a command line option.
@@ -34,7 +34,7 @@
 /* This patch centers dmenu in the middle of the screen.
  * https://tools.suckless.org/dmenu/patches/center/
  */
-#define CENTER_PATCH 0
+#define CENTER_PATCH 1
 
 /* Minor patch to enable the use of Ctrl+v (XA_PRIMARY) and Ctrl+Shift+v (CLIPBOARD) to paste.
  * By default dmenu only supports Ctrl+y and Ctrl+Shift+y to paste.
@@ -46,7 +46,7 @@
  * to the output of that command.
  * https://tools.suckless.org/dmenu/patches/dynamicoptions/
  */
-#define DYNAMIC_OPTIONS_PATCH 0
+#define DYNAMIC_OPTIONS_PATCH 1
 
 /* This patch will allow for emojis on the left side with a colored background when selected.
  * To test this try running:
@@ -74,13 +74,13 @@
  * G columns * L lines grid.
  * https://tools.suckless.org/dmenu/patches/grid/
  */
-#define GRID_PATCH 0
+#define GRID_PATCH 1
 
 /* This patch adds the ability to move left and right through a grid.
  * This patch depends on the grid patch.
  * https://tools.suckless.org/dmenu/patches/gridnav/
  */
-#define GRIDNAV_PATCH 0
+#define GRIDNAV_PATCH 1
 
 /* This patch highlights the individual characters of matched text for each dmenu list entry.
  * If combined with the fuzzymatch patch then fuzzy highlight will be used for highlighting
