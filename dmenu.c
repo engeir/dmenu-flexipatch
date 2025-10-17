@@ -70,6 +70,12 @@ enum {
 	SchemePurple,
 	SchemeRed,
 	#endif // EMOJI_HIGHLIGHT_PATCH
+	#if VI_MODE_PATCH
+	SchemeCursor,
+	#endif // VI_MODE_PATCH
+	#if CARET_SCHEME_PATCH
+	SchemeCaret,
+	#endif // CARET_SCHEME_PATCH
 	SchemeLast,
 }; /* color schemes */
 
@@ -273,7 +279,7 @@ cleanup(void)
 	XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 	#endif // INPUTMETHOD_PATCH
 	for (i = 0; i < SchemeLast; i++)
-		free(scheme[i]);
+		drw_scm_free(drw, scheme[i], 2);
 	for (i = 0; items && items[i].text; ++i) {
 		#if SEPARATOR_PATCH
 		free(separator_reverse ? items[i].text_output : items[i].text);
@@ -551,6 +557,16 @@ drawmenu(void)
 	drw_text_align(drw, x, 0, curpos, bh, text, cursor, AlignR);
 	drw_text_align(drw, x + curpos, 0, w - curpos, bh, text + cursor, strlen(text) - cursor, AlignL);
 	#endif // PASSWORD_PATCH
+
+	#if VI_MODE_PATCH
+	if (using_vi_mode && text[0] != '\0') {
+		drw_setscheme(drw, scheme[SchemeCursor]);
+		char vi_char[] = {text[cursor], '\0'};
+		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0);
+	} else if (using_vi_mode) {
+		drw_rect(drw, x + curpos, 2, lrpad / 2, bh - 4, 1, 0);
+	} else
+	#endif // VI_MODE_PATCH
 	#if LINE_HEIGHT_PATCH
 	drw_rect(drw, x + curpos - 1, 2 + (bh-fh)/2, 2, fh - 4, 1, 0);
 	#else
@@ -589,8 +605,24 @@ drawmenu(void)
 	#endif // PASSWORD_PATCH
 
 	curpos = TEXTW(text) - TEXTW(&text[cursor]);
-	if ((curpos += lrpad / 2 - 1) < w) {
+	curpos += lrpad / 2 - 1;
+
+	#if VI_MODE_PATCH
+	if (using_vi_mode && text[0] != '\0') {
+		drw_setscheme(drw, scheme[SchemeCursor]);
+		char vi_char[] = {text[cursor], '\0'};
+		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0);
+	} else if (using_vi_mode) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_rect(drw, x + curpos, 2, lrpad / 2, bh - 4, 1, 0);
+	} else
+	#endif // VI_MODE_PATCH
+	if (curpos < w) {
+		#if CARET_SCHEME_PATCH
+		drw_setscheme(drw, scheme[SchemeCaret]);
+		#else
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		#endif // CARET_SCHEME_PATCH
 		#if CARET_WIDTH_PATCH && LINE_HEIGHT_PATCH
 		drw_rect(drw, x + curpos, 2 + (bh-fh)/2, caret_width, fh - 4, 1, 0);
 		#elif CARET_WIDTH_PATCH
@@ -613,12 +645,26 @@ drawmenu(void)
 	rpad += border_width;
 	#endif // BORDER_PATCH
 	#endif // NUMBERS_PATCH
+
+	#if QUIET_PATCH
+	if (quiet && strlen(text) == 0) {
+		#if DYNAMIC_HEIGHT_PATCH
+		if (lines > 0)
+			XResizeWindow(dpy, win, mw, bh);
+		#endif // DYNAMIC_HEIGHT_PATCH
+		goto skip_item_listing;
+	}
+	#endif // QUIET_PATCH
+
 	if (lines > 0) {
+		#if DYNAMIC_HEIGHT_PATCH || GRID_PATCH
+		int i = 0;
+		#endif // DYNAMIC_HEIGHT_PATCH | GRID_PATCH
+
 		#if GRID_PATCH
 		/* draw grid */
-		int i = 0;
-		for (item = curr; item != next; item = item->right, i++)
-			if (columns)
+		for (item = curr; item != next; item = item->right, i++) {
+			if (columns) {
 				#if VERTFULL_PATCH
 				drawitem(
 					item,
@@ -634,20 +680,37 @@ drawmenu(void)
 					(mw - x) / columns
 				);
 				#endif // VERTFULL_PATCH
-			else
+			} else {
 				#if VERTFULL_PATCH
 				drawitem(item, 0, y += bh, mw);
 				#else
 				drawitem(item, x, y += bh, mw - x);
 				#endif // VERTFULL_PATCH
+			}
+		}
+		#if DYNAMIC_HEIGHT_PATCH
+		if (columns) {
+			XResizeWindow(dpy, win, mw, (MIN(i, lines) + 1) * bh);
+		} else {
+			XResizeWindow(dpy, win, mw, (i + 1) * bh);
+		}
+		#endif // DYNAMIC_HEIGHT_PATCH
+
 		#else
 		/* draw vertical list */
-		for (item = curr; item != next; item = item->right)
+		for (item = curr; item != next; item = item->right) {
+			#if DYNAMIC_HEIGHT_PATCH
+			i++;
+			#endif // DYNAMIC_HEIGHT_PATCH
 			#if VERTFULL_PATCH
 			drawitem(item, 0, y += bh, mw);
 			#else
 			drawitem(item, x, y += bh, mw - x);
 			#endif // VERTFULL_PATCH
+		}
+		#if DYNAMIC_HEIGHT_PATCH
+		XResizeWindow(dpy, win, mw, (i + 1) * bh);
+		#endif // DYNAMIC_HEIGHT_PATCH
 		#endif // GRID_PATCH
 	} else if (matches) {
 		/* draw horizontal list */
@@ -703,6 +766,11 @@ drawmenu(void)
 			);
 		}
 	}
+
+	#if QUIET_PATCH
+skip_item_listing:
+	#endif // QUIET_PATCH
+
 	#if NUMBERS_PATCH
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	#if PANGO_PATCH
@@ -992,6 +1060,22 @@ keypress(XKeyEvent *ev)
 	case XLookupBoth: /* a KeySym and a string are returned: use keysym */
 		break;
 	}
+
+	#if VI_MODE_PATCH
+	if (using_vi_mode) {
+		vi_keypress(ksym, ev);
+		return;
+	}
+
+	if (vi_mode &&
+			   (ksym == global_esc.ksym &&
+				(ev->state & global_esc.state) == global_esc.state)) {
+		using_vi_mode = 1;
+		if (cursor)
+			cursor = nextrune(-1);
+		goto draw;
+	}
+	#endif // VI_MODE_PATCH
 
 	if (ev->state & ControlMask) {
 		switch(ksym) {
@@ -1395,6 +1479,11 @@ draw:
 		fflush(stdout);
 	}
 	#endif // INCREMENTAL_PATCH
+	#if VI_MODE_PATCH
+	if (using_vi_mode && text[cursor] == '\0')
+		--cursor;
+	#endif // VI_MODE_PATCH
+
 	drawmenu();
 }
 
@@ -1881,6 +1970,9 @@ usage(void)
 		#if !NON_BLOCKING_STDIN_PATCH
 		"f"
 		#endif // NON_BLOCKING_STDIN_PATCH
+		#if QUIET_PATCH
+		"q"
+		#endif // QUIET_PATCH
 		#if INCREMENTAL_PATCH
 		"r"
 		#endif // INCREMENTAL_PATCH
@@ -1917,6 +2009,9 @@ usage(void)
 		#if CARET_WIDTH_PATCH
 		"[-cw caret_width] "
 		#endif // CARET_WIDTH_PATCH
+		#if VI_MODE_PATCH
+		"[-vi] "
+		#endif // VI_MODE_PATCH
 		#if MANAGED_PATCH
 		"[-wm] "
 		#endif // MANAGED_PATCH
@@ -2046,6 +2141,10 @@ main(int argc, char *argv[])
 		} else if (!strcmp(argv[i], "-r")) { /* incremental */
 			incremental = !incremental;
 		#endif // INCREMENTAL_PATCH
+		#if QUIET_PATCH
+		} else if (!strcmp(argv[i], "-q")) { /* quiet, don't list items if search is empty */
+			quiet = !quiet;
+		#endif // QUIET_PATCH
 		#if CASEINSENSITIVE_PATCH
 		} else if (!strcmp(argv[i], "-s")) { /* case-sensitive item matching */
 			fstrncmp = strncmp;
@@ -2055,6 +2154,13 @@ main(int argc, char *argv[])
 			fstrncmp = strncasecmp;
 			fstrstr = cistrstr;
 		#endif // CASEINSENSITIVE_PATCH
+		#if VI_MODE_PATCH
+		} else if (!strcmp(argv[i], "-vi")) {
+			vi_mode = 1;
+			using_vi_mode = start_mode;
+			global_esc.ksym = XK_Escape;
+			global_esc.state = 0;
+		#endif // VI_MODE_PATCH
 		#if MANAGED_PATCH
 		} else if (!strcmp(argv[i], "-wm")) { /* display as managed wm window */
 			managed = 1;

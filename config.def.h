@@ -25,6 +25,9 @@ static int min_width = 500;                 /* minimum width when centered */
 static const int vertpad = 10;              /* vertical padding of bar */
 static const int sidepad = 10;              /* horizontal padding of bar */
 #endif // BARPADDING_PATCH
+#if QUIET_PATCH
+static int quiet = 0;                       /* -q  option; if 1, dmenu will not show any items if the search string is empty */
+#endif // QUIET_PATCH
 #if RESTRICT_RETURN_PATCH
 static int restrict_return = 0;             /* -1 option; if 1, disables shift-return and ctrl-return */
 #endif // RESTRICT_RETURN_PATCH
@@ -82,6 +85,12 @@ static const unsigned int alphas[][3]      = {
 	[SchemeBlue] = { OPAQUE, baralpha, borderalpha },
 	[SchemePurple] = { OPAQUE, baralpha, borderalpha },
 	#endif // EMOJI_HIGHLIGHT_PATCH
+	#if VI_MODE_PATCH
+	[SchemeCursor] = { OPAQUE, baralpha, borderalpha },
+	#endif // VI_MODE_PATCH
+	#if CARET_SCHEME_PATCH
+	[SchemeCaret] = { OPAQUE, baralpha, borderalpha },
+	#endif // CARET_SCHEME_PATCH
 };
 #endif // ALPHA_PATCH
 
@@ -115,6 +124,12 @@ char *colors[][2] = {
 	[SchemeBlue]   = { "#ffffff", "#5280e0" },
 	[SchemePurple] = { "#ffffff", "#9952e0" },
 	#endif // EMOJI_HIGHLIGHT_PATCH
+	#if VI_MODE_PATCH
+	[SchemeCursor] = { "#222222", "#bbbbbb" },
+	#endif // VI_MODE_PATCH
+	#if CARET_SCHEME_PATCH
+	[SchemeCaret] = { "#eeeeee", "#222222" },
+	#endif // CARET_SCHEME_PATCH
 };
 /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
 static unsigned int lines      = 0;
@@ -139,6 +154,20 @@ static int histnodup           = 1;	/* if 0, record repeated histories */
 static const char startpipe[] = "#";
 #endif // PIPEOUT_PATCH
 static const char worddelimiters[] = " ";
+
+#if VI_MODE_PATCH
+/*
+ * -vi option; if nonzero, vi mode is always enabled and can be
+ * accessed with the global_esc keysym + mod mask
+ */
+static unsigned int vi_mode = 1;
+static unsigned int start_mode = 0;			/* mode to use when -vi is passed. 0 = insert mode, 1 = normal mode */
+static Key global_esc = { XK_n, Mod1Mask };	/* escape key when vi mode is not enabled explicitly */
+static Key quit_keys[] = {
+	/* keysym	modifier */
+	{ XK_q,		0 }
+};
+#endif // VI_MODE_PATCH
 
 #if BORDER_PATCH
 /* Size of the window border */

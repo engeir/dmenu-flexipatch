@@ -1,5 +1,5 @@
-Similar to [dwm-flexipatch](https://github.com/bakkeby/dwm-flexipatch) this dmenu 5.3 (b1e217b,
-2025-03-17) project has a different take on patching. It uses preprocessor directives to decide
+Similar to [dwm-flexipatch](https://github.com/bakkeby/dwm-flexipatch) this dmenu 5.4 (8b48986,
+2025-09-29) project has a different take on patching. It uses preprocessor directives to decide
 whether or not to include a patch during build time. Essentially this means that this build, for
 better or worse, contains both the patched _and_ the original code. The aim being that you can
 select which patches to include and the build will contain that code and nothing more.
@@ -27,6 +27,10 @@ Browsing patches? There is a [map of patches](https://coggle.it/diagram/YjT2DD6j
 ---
 
 ### Changelog:
+
+2025-10-16 - Added the dynamic height and quiet patches
+
+2025-05-28 - Added the colored caret and vi mode patches
 
 2024-07-17 - Added the input method patch
 
@@ -99,6 +103,12 @@ Browsing patches? There is a [map of patches](https://coggle.it/diagram/YjT2DD6j
         library when color glyphs are used
       - enabling this will crash dmenu on encountering such glyphs unless you also have an updated
         Xft library that can handle them
+
+   - [colored caret](https://tools.suckless.org/dmenu/patches/colored-caret/)
+      - adds the `SchemeCaret` colour scheme allowing customised styling of the caret
+
+   - [dynamic height](https://gist.github.com/mircodz/1d9b88db958089bb08adbf45eb53b66f)
+      - adjusts the height of the bar depending on how many items are drawn in the list presentation
 
    - [dynamic_options](https://tools.suckless.org/dmenu/patches/dynamicoptions/)
       - adds a flag (`-dy`) which makes dmenu run the command given to it whenever input is changed
@@ -225,6 +235,9 @@ Browsing patches? There is a [map of patches](https://coggle.it/diagram/YjT2DD6j
         text to stdout
       - the flag basically swaps the functions of Return and Shift+Return hotkeys
 
+   - [quiet](https://github.com/baskerville/dmenu_qxyw/blob/master/dmenu_qxyw-hg.diff)
+      - adds a flag (-q) which makes dmenu not show any items if the search string is empty
+
    - [rejectnomatch](https://tools.suckless.org/dmenu/patches/reject-no-match/)
       - adds a new flag to dmenu with which text input will be rejected if it would result in no
         matching item
@@ -260,6 +273,9 @@ Browsing patches? There is a [map of patches](https://coggle.it/diagram/YjT2DD6j
 
    - [vertfull](https://tools.suckless.org/dmenu/patches/vertfull/)
       - prevents dmenu from indenting items at the same level as the prompt length
+
+   - [vi mode](https://tools.suckless.org/dmenu/patches/vi-mode/)
+      - adds basic vi mode capabilities to dmenu
 
    - [wmtype](https://github.com/Baitinq/dmenu/blob/master/patches/dmenu-wm_type.diff)
       - adds extended window manager hints such as \_NET_WM_WINDOW_TYPE and \_NET_WM_WINDOW_TYPE_DOCK
