@@ -5,9 +5,11 @@ cache="$cachedir/dmenu_run"
 
 [ ! -e "$cachedir" ] && mkdir -p "$cachedir"
 
+DMENU_PATH="$HOME/bin:$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+
 IFS=:
-if stest -dqr -n "$cache" $PATH; then
-	stest -flx $PATH | sort -u | tee "$cache"
+if stest -dqr -n "$cache" $DMENU_PATH; then
+	stest -flx $DMENU_PATH | sort -u | tee "$cache"
 else
 	cat "$cache"
 fi
