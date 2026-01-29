@@ -562,7 +562,11 @@ drawmenu(void)
 	if (using_vi_mode && text[0] != '\0') {
 		drw_setscheme(drw, scheme[SchemeCursor]);
 		char vi_char[] = {text[cursor], '\0'};
-		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0);
+		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0
+			#if PANGO_PATCH
+			, False
+			#endif // PANGO_PATCH
+		);
 	} else if (using_vi_mode) {
 		drw_rect(drw, x + curpos, 2, lrpad / 2, bh - 4, 1, 0);
 	} else
@@ -611,7 +615,11 @@ drawmenu(void)
 	if (using_vi_mode && text[0] != '\0') {
 		drw_setscheme(drw, scheme[SchemeCursor]);
 		char vi_char[] = {text[cursor], '\0'};
-		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0);
+		drw_text(drw, x + curpos, 0, TEXTW(vi_char) - lrpad, bh, 0, vi_char, 0
+			#if PANGO_PATCH
+			, False
+			#endif // PANGO_PATCH
+		);
 	} else if (using_vi_mode) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		drw_rect(drw, x + curpos, 2, lrpad / 2, bh - 4, 1, 0);
@@ -2156,6 +2164,15 @@ main(int argc, char *argv[])
 		#endif // CASEINSENSITIVE_PATCH
 		#if VI_MODE_PATCH
 		} else if (!strcmp(argv[i], "-vi")) {
+			if (i + 1 < argc) {
+				if (!strcmp(argv[i+1], "0")) {
+					start_mode = 0;
+					i++;
+				} else if (!strcmp(argv[i+1], "1")) {
+					start_mode = 1;
+					i++;
+				}
+			}
 			vi_mode = 1;
 			using_vi_mode = start_mode;
 			global_esc.ksym = XK_Escape;
